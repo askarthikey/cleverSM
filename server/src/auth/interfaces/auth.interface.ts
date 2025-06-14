@@ -10,7 +10,8 @@ export interface AuthResponse {
     bio?: string;
     isVerified: boolean;
   };
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface JwtPayload {

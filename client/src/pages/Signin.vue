@@ -304,8 +304,8 @@ const handleSignIn = async () => {
     
     console.log('Login successful:', response)
     
-    // Set user in global state
-    setUser(response.data.user)
+    // Set user in global state with token
+    setUser(response.user, response.token)
     
     // Reset failed attempts on success
     failedAttempts.value = 0

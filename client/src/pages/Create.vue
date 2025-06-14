@@ -36,7 +36,6 @@
               <svg class="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
               </svg>
-              <!-- Character count -->
               <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
                 <span 
                   class="text-xs"
@@ -70,7 +69,6 @@
               <svg class="w-4 h-4 absolute left-4 top-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
               </svg>
-              <!-- Character count for description -->
               <div class="absolute right-4 bottom-4">
                 <span 
                   class="text-xs"
@@ -83,76 +81,23 @@
             <p v-if="errors.description" class="text-red-400 text-sm">{{ errors.description }}</p>
           </div>
 
-          <!-- Post Preview -->
-          <div v-if="formData.title || formData.description" class="space-y-2">
+          <!-- Privacy Setting -->
+          <div class="space-y-2">
             <label class="text-white font-semibold text-sm flex items-center space-x-2">
               <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
               </svg>
-              <span>Preview</span>
+              <span>Privacy</span>
             </label>
-            <div class="bg-white/5 border border-white/10 rounded-xl p-4">
-              <div class="flex items-start space-x-3">
-                <!-- User Avatar -->
-                <div class="w-10 h-10 bg-gradient-to-r from-pink-500 to-violet-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span class="text-white text-sm font-bold">
-                    {{ user?.username?.charAt(0).toUpperCase() || 'U' }}
-                  </span>
-                </div>
-                
-                <div class="flex-1 min-w-0">
-                  <!-- User Info -->
-                  <div class="flex items-center space-x-2 mb-2">
-                    <span class="text-white font-semibold">{{ user?.username || 'Your Username' }}</span>
-                    <span class="text-white/50 text-sm">• now</span>
-                    <!-- Privacy indicator -->
-                    <div class="flex items-center space-x-1">
-                      <component 
-                        :is="getPrivacyIcon(formData.privacy as PrivacyType)" 
-                        class="w-3 h-3" 
-                      />
-                      <span class="text-white/50 text-xs">{{ privacySettings[formData.privacy as PrivacyType].label }}</span>
-                    </div>
-                  </div>
-                  
-                  <!-- Post Content with proper overflow handling -->
-                  <div class="space-y-2">
-                    <h3 v-if="formData.title" class="text-white font-semibold text-lg break-words">
-                      {{ formData.title }}
-                    </h3>
-                    <div v-if="formData.description" class="text-white/80 whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                      {{ formData.description }}
-                    </div>
-                    <div v-if="!formData.title && !formData.description" class="text-white/40 italic">
-                      Your post preview will appear here...
-                    </div>
-                  </div>
-
-                  <!-- Post Actions Preview -->
-                  <div class="flex items-center space-x-6 mt-4 pt-3 border-t border-white/10">
-                    <button type="button" class="flex items-center space-x-2 text-white/60 hover:text-pink-400 transition-colors">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                      </svg>
-                      <span class="text-sm">Like</span>
-                    </button>
-                    <button type="button" class="flex items-center space-x-2 text-white/60 hover:text-blue-400 transition-colors">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                      </svg>
-                      <span class="text-sm">Comment</span>
-                    </button>
-                    <button type="button" class="flex items-center space-x-2 text-white/60 hover:text-green-400 transition-colors">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
-                      </svg>
-                      <span class="text-sm">Share</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <select
+              v-model="formData.privacy"
+              class="w-full bg-white/10 border border-white/20 text-white rounded-xl p-4 focus:border-pink-500 focus:outline-none transition-colors"
+            >
+              <option value="public" class="bg-gray-800 text-white">🌍 Public - Anyone can see</option>
+              <option value="followers" class="bg-gray-800 text-white">👥 Followers - Only followers can see</option>
+              <option value="friends" class="bg-gray-800 text-white">👫 Friends - Only friends can see</option>
+              <option value="private" class="bg-gray-800 text-white">🔒 Private - Only you can see</option>
+            </select>
           </div>
 
           <!-- Post Options -->
@@ -166,61 +111,6 @@
             </label>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Privacy Setting with Dropdown -->
-              <div class="bg-white/5 border border-white/10 rounded-xl p-4 relative" ref="privacyDropdownRef">
-                <button
-                  type="button"
-                  @click="showPrivacyDropdown = !showPrivacyDropdown"
-                  class="w-full flex items-center justify-between text-left hover:bg-white/5 transition-colors rounded-lg"
-                >
-                  <div class="flex items-center space-x-3">
-                    <component 
-                      :is="getPrivacyIcon(formData.privacy as PrivacyType)" 
-                      class="w-4 h-4" 
-                    />
-                    <div>
-                      <div class="text-white font-medium text-sm">{{ privacySettings[formData.privacy as PrivacyType].label }}</div>
-                      <div class="text-white/60 text-xs">{{ privacySettings[formData.privacy as PrivacyType].description }}</div>
-                    </div>
-                  </div>
-                  <svg 
-                    class="w-4 h-4 text-white/50 transition-transform"
-                    :class="{ 'rotate-180': showPrivacyDropdown }"
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </button>
-
-                <!-- Privacy Dropdown -->
-                <div 
-                  v-if="showPrivacyDropdown"
-                  class="absolute top-full left-0 right-0 mt-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-lg z-50"
-                >
-                  <div class="p-2 space-y-1">
-                    <button
-                      v-for="(setting, key) in privacySettings"
-                      :key="key"
-                      type="button"
-                      @click="selectPrivacy(key)"
-                      class="w-full flex items-center space-x-3 p-3 text-left hover:bg-white/10 rounded-lg transition-colors"
-                      :class="{ 'bg-white/10': formData.privacy === key }"
-                    >
-                      <component :is="getPrivacyIcon(key)" class="w-4 h-4" />
-                      <div>
-                        <div class="text-white font-medium text-sm">{{ setting.label }}</div>
-                        <div class="text-white/60 text-xs">{{ setting.description }}</div>
-                      </div>
-                      <svg v-if="formData.privacy === key" class="w-4 h-4 text-green-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               <!-- Comments Setting -->
               <div class="bg-white/5 border border-white/10 rounded-xl p-4">
                 <div class="flex items-center space-x-3">
@@ -236,15 +126,9 @@
                     </label>
                     <div class="text-white/60 text-xs">Let others comment on your post</div>
                   </div>
-                  <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                  </svg>
                 </div>
               </div>
-            </div>
 
-            <!-- Additional Options -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <!-- Allow Shares -->
               <div class="bg-white/5 border border-white/10 rounded-xl p-4">
                 <div class="flex items-center space-x-3">
@@ -260,30 +144,6 @@
                     </label>
                     <div class="text-white/60 text-xs">Let others share your post</div>
                   </div>
-                  <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Notify on Interactions -->
-              <div class="bg-white/5 border border-white/10 rounded-xl p-4">
-                <div class="flex items-center space-x-3">
-                  <input
-                    id="notifyInteractions"
-                    v-model="formData.notifyInteractions"
-                    type="checkbox"
-                    class="w-4 h-4 text-pink-500 bg-white/10 border-white/20 rounded focus:ring-pink-500"
-                  />
-                  <div class="flex-1">
-                    <label for="notifyInteractions" class="text-white font-medium text-sm cursor-pointer">
-                      Notify on Interactions
-                    </label>
-                    <div class="text-white/60 text-xs">Get notified about likes and comments</div>
-                  </div>
-                  <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h5M4 15h3m0-4h2l2-2m0 0l2-2m-2 2l-2-2m2 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6h6z"></path>
-                  </svg>
                 </div>
               </div>
             </div>
@@ -364,155 +224,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, defineComponent, h } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { postsApi, type CreatePostData } from '../services/posts'
 
 const router = useRouter()
-const { user } = useAuth()
-
-// Define privacy types
-type PrivacyType = 'public' | 'followers' | 'friends' | 'private'
-
-// Privacy icon components using render functions
-const GlobeIcon = defineComponent({
-  render() {
-    return h('svg', {
-      class: 'w-4 h-4 text-green-400',
-      fill: 'none',
-      stroke: 'currentColor',
-      viewBox: '0 0 24 24'
-    }, [
-      h('path', {
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
-        'stroke-width': '2',
-        d: 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9'
-      })
-    ])
-  }
-})
-
-const UsersIcon = defineComponent({
-  render() {
-    return h('svg', {
-      class: 'w-4 h-4 text-blue-400',
-      fill: 'none',
-      stroke: 'currentColor',
-      viewBox: '0 0 24 24'
-    }, [
-      h('path', {
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
-        'stroke-width': '2',
-        d: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z'
-      })
-    ])
-  }
-})
-
-const UserPlusIcon = defineComponent({
-  render() {
-    return h('svg', {
-      class: 'w-4 h-4 text-purple-400',
-      fill: 'none',
-      stroke: 'currentColor',
-      viewBox: '0 0 24 24'
-    }, [
-      h('path', {
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
-        'stroke-width': '2',
-        d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-      })
-    ])
-  }
-})
-
-const LockIcon = defineComponent({
-  render() {
-    return h('svg', {
-      class: 'w-4 h-4 text-red-400',
-      fill: 'none',
-      stroke: 'currentColor',
-      viewBox: '0 0 24 24'
-    }, [
-      h('path', {
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
-        'stroke-width': '2',
-        d: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
-      })
-    ])
-  }
-})
-
-// Privacy settings configuration with proper typing
-const privacySettings: Record<PrivacyType, { label: string; description: string }> = {
-  public: {
-    label: 'Public',
-    description: 'Anyone can see this post'
-  },
-  followers: {
-    label: 'Followers Only',
-    description: 'Only your followers can see this'
-  },
-  friends: {
-    label: 'Friends Only',
-    description: 'Only your friends can see this'
-  },
-  private: {
-    label: 'Only Me',
-    description: 'Only you can see this post'
-  }
-}
-
-// Helper function to get privacy icon
-const getPrivacyIcon = (privacy: PrivacyType) => {
-  const iconMap = {
-    public: GlobeIcon,
-    followers: UsersIcon,
-    friends: UserPlusIcon,
-    private: LockIcon
-  }
-  return iconMap[privacy]
-}
+const { isAuthenticated } = useAuth()
 
 // Form data
-const formData = ref({
+const formData = ref<CreatePostData>({
   title: '',
   description: '',
-  privacy: 'public' as PrivacyType,
   allowComments: true,
   allowShares: true,
-  notifyInteractions: true
+  isPublic: true,
+  privacy: 'public',
+  tags: []
 })
 
 // Form state
 const isLoading = ref(false)
 const showSuccess = ref(false)
-const showPrivacyDropdown = ref(false)
 const apiError = ref('')
-const privacyDropdownRef = ref<HTMLElement>()
+const createdPostId = ref('')
 
 // Errors
 const errors = ref({
   title: '',
   description: ''
 })
-
-// Privacy selection
-const selectPrivacy = (privacy: PrivacyType) => {
-  formData.value.privacy = privacy
-  showPrivacyDropdown.value = false
-}
-
-// Click outside handler
-const handleClickOutside = (event: MouseEvent) => {
-  if (privacyDropdownRef.value && !privacyDropdownRef.value.contains(event.target as Node)) {
-    showPrivacyDropdown.value = false
-  }
-}
 
 // Validation functions
 const validateTitle = () => {
@@ -571,6 +312,15 @@ const isFormValid = computed(() => {
 
 // Handle form submission
 const handleCreatePost = async () => {
+  // Check if user is authenticated
+  if (!isAuthenticated.value) {
+    apiError.value = 'You must be logged in to create a post. Redirecting to sign in...'
+    setTimeout(() => {
+      router.push('/signin')
+    }, 2000)
+    return
+  }
+
   if (!isFormValid.value) return
 
   isLoading.value = true
@@ -585,29 +335,40 @@ const handleCreatePost = async () => {
       return
     }
 
-    // Here you would make the API call to create the post
-    const postData = {
+    // Prepare post data
+    const postData: CreatePostData = {
       title: formData.value.title.trim(),
       description: formData.value.description.trim(),
-      privacy: formData.value.privacy,
       allowComments: formData.value.allowComments,
       allowShares: formData.value.allowShares,
-      notifyInteractions: formData.value.notifyInteractions
+      isPublic: formData.value.privacy === 'public',
+      privacy: formData.value.privacy,
+      tags: formData.value.tags?.filter(tag => tag.trim()) || []
     }
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // Create post via API
+    const createdPost = await postsApi.create(postData)
+    createdPostId.value = createdPost._id
     
-    console.log('Post created:', {
-      ...postData,
-      author: user.value?.username
-    })
+    console.log('Post created successfully:', createdPost)
     
     showSuccess.value = true
     
+    // Clear draft after successful creation
+    localStorage.removeItem('postDraft')
+    
   } catch (error: any) {
     console.error('Create post error:', error)
-    apiError.value = error.message || 'Failed to create post. Please try again.'
+    
+    if (error.response?.data?.message) {
+      apiError.value = error.response.data.message
+    } else if (error.response?.data?.error) {
+      apiError.value = error.response.data.error
+    } else if (error.message) {
+      apiError.value = error.message
+    } else {
+      apiError.value = 'Failed to create post. Please try again.'
+    }
   } finally {
     isLoading.value = false
   }
@@ -618,7 +379,7 @@ const saveDraft = () => {
   console.log('Saving draft:', formData.value)
   localStorage.setItem('postDraft', JSON.stringify(formData.value))
   
-  // Show a toast notification
+  // Show a toast notification (you can implement a proper toast system)
   alert('Draft saved successfully!')
 }
 
@@ -638,7 +399,11 @@ const loadDraft = () => {
 // Success modal actions
 const viewPost = () => {
   showSuccess.value = false
-  router.push('/')
+  if (createdPostId.value) {
+    router.push(`/post/${createdPostId.value}`)
+  } else {
+    router.push('/')
+  }
 }
 
 const createAnother = () => {
@@ -647,27 +412,31 @@ const createAnother = () => {
   formData.value = {
     title: '',
     description: '',
-    privacy: 'public',
     allowComments: true,
     allowShares: true,
-    notifyInteractions: true
+    isPublic: true,
+    privacy: 'public',
+    tags: []
   }
   errors.value = {
     title: '',
     description: ''
   }
+  createdPostId.value = ''
   // Clear draft
   localStorage.removeItem('postDraft')
 }
 
 // Lifecycle hooks
 onMounted(() => {
+  // Check if user is authenticated on mount
+  if (!isAuthenticated.value) {
+    console.log('User not authenticated, redirecting to signin')
+    router.push('/signin')
+    return
+  }
+  
   loadDraft()
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -705,11 +474,6 @@ input[type="checkbox"]:checked {
 
 .overflow-wrap-anywhere {
   overflow-wrap: anywhere;
-}
-
-/* Dropdown animations */
-.rotate-180 {
-  transform: rotate(180deg);
 }
 
 /* Responsive adjustments */

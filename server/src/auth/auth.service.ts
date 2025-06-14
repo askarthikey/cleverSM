@@ -8,6 +8,7 @@ import * as jwt from 'jsonwebtoken';
 @Injectable()
 export class AuthService {
   private readonly jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+  private readonly refreshSecret = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key-change-in-production';
 
   constructor(private usersService: UsersService) {}
 
@@ -21,13 +22,14 @@ export class AuthService {
         throw new Error('User creation failed - no ID generated');
       }
 
-      // Generate JWT token
+      // Generate JWT tokens
       const payload: JwtPayload = {
         userId: user._id.toString(),
         username: user.username,
       };
 
-      const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '7d' });
+      const accessToken = jwt.sign(payload, this.jwtSecret, { expiresIn: '15m' });
+      const refreshToken = jwt.sign(payload, this.refreshSecret, { expiresIn: '7d' });
 
       return {
         user: {
@@ -39,7 +41,8 @@ export class AuthService {
           bio: user.bio,
           isVerified: user.isVerified,
         },
-        token,
+        accessToken,
+        refreshToken,
       };
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -67,13 +70,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate JWT token
+    // Generate JWT tokens
     const payload: JwtPayload = {
       userId: user._id.toString(),
       username: user.username,
     };
 
-    const token = jwt.sign(payload, this.jwtSecret, { expiresIn: '7d' });
+    const accessToken = jwt.sign(payload, this.jwtSecret, { expiresIn: '15m' });
+    const refreshToken = jwt.sign(payload, this.refreshSecret, { expiresIn: '7d' });
 
     return {
       user: {
@@ -85,7 +89,8 @@ export class AuthService {
         bio: user.bio,
         isVerified: user.isVerified,
       },
-      token,
+      accessToken,
+      refreshToken,
     };
   }
 
@@ -97,8 +102,50 @@ export class AuthService {
     }
   }
 
+  async verifyRefreshToken(refreshToken: string): Promise<JwtPayload> {
+    try {
+      return jwt.verify(refreshToken, this.refreshSecret) as JwtPayload;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string }> {
+    try {
+      // Verify refresh token
+      const payload = await this.verifyRefreshToken(refreshToken);
+      
+      // Verify user still exists
+      const user = await this.validateUserById(payload.userId);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // Generate new access token
+      const newPayload: JwtPayload = {
+        userId: payload.userId,
+        username: payload.username,
+      };
+
+      const accessToken = jwt.sign(newPayload, this.jwtSecret, { expiresIn: '15m' });
+
+      return { accessToken };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
   async checkUsernameAvailability(username: string): Promise<{ available: boolean }> {
     const isAvailable = await this.usersService.checkUsernameAvailability(username);
     return { available: isAvailable };
+  }
+
+  // Add this method to your existing AuthService
+  async validateUserById(userId: string): Promise<any> {
+    try {
+      return await this.usersService.findById(userId);
+    } catch (error) {
+      return null;
+    }
   }
 }

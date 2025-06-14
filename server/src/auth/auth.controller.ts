@@ -57,6 +57,28 @@ export class AuthController {
     }
   }
 
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(@Body() body: { refreshToken: string }) {
+    try {
+      if (!body.refreshToken) {
+        throw new BadRequestException('Refresh token is required');
+      }
+
+      const result = await this.authService.refreshAccessToken(body.refreshToken);
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Token refreshed successfully',
+        data: result,
+      };
+    } catch (error) {
+      if (error.status) {
+        throw error;
+      }
+      throw new BadRequestException(error.message || 'Token refresh failed');
+    }
+  }
+
   @Get('check-username/:username')
   async checkUsername(@Param('username') username: string) {
     try {

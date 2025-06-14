@@ -32,6 +32,8 @@ export interface UserResponse {
   followers: ObjectId[];
   following: ObjectId[];
   isVerified: boolean;
+  isFollowing?: boolean;
+  followRequestSent?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

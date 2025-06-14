@@ -1,5 +1,4 @@
-import { apiService } from '../api/index'
-import type { ApiResponse } from '../api/index'
+import api from './api'
 
 export interface User {
   _id: string
@@ -13,7 +12,14 @@ export interface User {
 
 export interface AuthResponse {
   user: User
-  token: string
+  accessToken: string
+  refreshToken: string
+}
+
+export interface BackendAuthResponse {
+  statusCode: number
+  message: string
+  data: AuthResponse
 }
 
 export interface RegisterRequest {
@@ -32,37 +38,64 @@ export interface UsernameCheckResponse {
   available: boolean
 }
 
+export interface BackendUsernameCheckResponse {
+  statusCode: number
+  message: string
+  data: UsernameCheckResponse
+}
+
 class AuthService {
-  async register(data: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
-    const response = await apiService.post<ApiResponse<AuthResponse>>('/auth/register', data)
+  async register(data: RegisterRequest): Promise<AuthResponse> {
+    const response = await api.post<BackendAuthResponse>('/auth/register', data)
     
-    // Store token in localStorage
-    if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
+    // Store tokens in localStorage
+    if (response.data.data.accessToken) {
+      localStorage.setItem('auth_token', response.data.data.accessToken)
+      localStorage.setItem('refresh_token', response.data.data.refreshToken)
+      localStorage.setItem('user', JSON.stringify(response.data.data.user))
     }
     
-    return response
+    return response.data.data
   }
 
-  async login(data: LoginRequest): Promise<ApiResponse<AuthResponse>> {
-    const response = await apiService.post<ApiResponse<AuthResponse>>('/auth/login', data)
+  async login(data: LoginRequest): Promise<AuthResponse> {
+    const response = await api.post<BackendAuthResponse>('/auth/login', data)
     
-    // Store token in localStorage
-    if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
+    // Store tokens in localStorage
+    if (response.data.data.accessToken) {
+      localStorage.setItem('auth_token', response.data.data.accessToken)
+      localStorage.setItem('refresh_token', response.data.data.refreshToken)
+      localStorage.setItem('user', JSON.stringify(response.data.data.user))
     }
     
-    return response
+    return response.data.data
   }
 
-  async checkUsername(username: string): Promise<ApiResponse<UsernameCheckResponse>> {
-    return await apiService.get<ApiResponse<UsernameCheckResponse>>(`/auth/check-username/${username}`)
+  async checkUsername(username: string): Promise<UsernameCheckResponse> {
+    const response = await api.get<BackendUsernameCheckResponse>(`/auth/check-username/${username}`)
+    return response.data.data
+  }
+
+  async refreshToken(): Promise<string | null> {
+    try {
+      const refreshToken = localStorage.getItem('refresh_token')
+      if (!refreshToken) return null
+
+      const response = await api.post('/auth/refresh', { refreshToken })
+      const newAccessToken = response.data.data.accessToken
+
+      localStorage.setItem('auth_token', newAccessToken)
+      return newAccessToken
+    } catch (error) {
+      // Refresh failed, logout user
+      this.logout()
+      return null
+    }
   }
 
   logout() {
     localStorage.removeItem('auth_token')
+    localStorage.removeItem('refresh_token')
     localStorage.removeItem('user')
   }
 
@@ -80,6 +113,10 @@ class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem('auth_token')
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token')
   }
 
   isAuthenticated(): boolean {

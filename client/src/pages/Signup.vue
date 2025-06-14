@@ -283,7 +283,7 @@ const checkUsername = async () => {
 
   try {
     const response = await authService.checkUsername(username)
-    if (response.data.available) {
+    if (response.available) {
       isUsernameValid.value = true
       errors.value.username = ''
     } else {
