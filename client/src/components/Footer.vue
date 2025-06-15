@@ -46,7 +46,7 @@
       </div>
       
       <div class="border-t border-white/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-        <p class="text-white/60 text-sm">© 2024 Vibe. All rights reserved.</p>
+        <p class="text-white/60 text-sm">© 2025 Vibe. All rights reserved.</p>
         <div class="flex space-x-6 mt-4 md:mt-0">
           <a href="#" class="text-white/60 hover:text-white transition-colors">
             <i class="pi pi-twitter text-lg"></i>
