@@ -165,18 +165,57 @@ export class NotificationService {
     const followRequestsCollection = this.getFollowRequestsCollection();
     const skip = (page - 1) * limit;
 
-    const [requests, total] = await Promise.all([
-      followRequestsCollection
-        .find({ recipientId: new ObjectId(userId), status: 'pending' })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .toArray() as Promise<FollowRequestResponse[]>,
-      followRequestsCollection.countDocuments({ 
-        recipientId: new ObjectId(userId), 
-        status: 'pending' 
-      })
+    // Use aggregation to get unique requests per sender (latest one if duplicates exist)
+    const [requests, totalArray] = await Promise.all([
+      followRequestsCollection.aggregate([
+        {
+          $match: { 
+            recipientId: new ObjectId(userId), 
+            status: 'pending' 
+          }
+        },
+        {
+          $sort: { createdAt: -1 }
+        },
+        {
+          $group: {
+            _id: '$senderId',
+            latestRequest: { $first: '$$ROOT' }
+          }
+        },
+        {
+          $replaceRoot: { newRoot: '$latestRequest' }
+        },
+        {
+          $sort: { createdAt: -1 }
+        },
+        {
+          $skip: skip
+        },
+        {
+          $limit: limit
+        }
+      ]).toArray() as Promise<FollowRequestResponse[]>,
+      
+      followRequestsCollection.aggregate([
+        {
+          $match: { 
+            recipientId: new ObjectId(userId), 
+            status: 'pending' 
+          }
+        },
+        {
+          $group: {
+            _id: '$senderId'
+          }
+        },
+        {
+          $count: 'total'
+        }
+      ]).toArray()
     ]);
+
+    const total = totalArray.length > 0 ? totalArray[0].total : 0;
 
     return { requests, total };
   }
@@ -305,5 +344,49 @@ export class NotificationService {
       _id: new ObjectId(notificationId),
       recipientId: new ObjectId(userId)
     });
+  }
+
+  // Clean up duplicate follow requests (keep only the latest one per sender-recipient pair)
+  async cleanupDuplicateFollowRequests(): Promise<{ removed: number }> {
+    const followRequestsCollection = this.getFollowRequestsCollection();
+    
+    // Find all duplicate requests
+    const duplicates = await followRequestsCollection.aggregate([
+      {
+        $match: { status: 'pending' }
+      },
+      {
+        $group: {
+          _id: {
+            senderId: '$senderId',
+            recipientId: '$recipientId'
+          },
+          requests: { $push: '$$ROOT' },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $match: { count: { $gt: 1 } }
+      }
+    ]).toArray();
+
+    let removedCount = 0;
+
+    // For each group of duplicates, keep only the latest one
+    for (const group of duplicates) {
+      const requests = group.requests.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      
+      // Remove all but the first (latest) request
+      const toRemove = requests.slice(1);
+      
+      for (const request of toRemove) {
+        await followRequestsCollection.deleteOne({ _id: request._id });
+        removedCount++;
+      }
+    }
+
+    return { removed: removedCount };
   }
 }

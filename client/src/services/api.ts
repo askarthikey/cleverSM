@@ -16,8 +16,8 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    // Get token from localStorage
-    const token = localStorage.getItem('auth_token');
+    // Get token from localStorage or sessionStorage
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -76,15 +76,21 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        // Try to refresh the token
-        const refreshToken = localStorage.getItem('refresh_token');
+        // Try to refresh the token - check both storages
+        const refreshToken = localStorage.getItem('refresh_token') || sessionStorage.getItem('refresh_token');
         if (refreshToken) {
           const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refreshToken
           });
           
           const newAccessToken = response.data.data.accessToken;
-          localStorage.setItem('auth_token', newAccessToken);
+          
+          // Store the new token in the same storage as the refresh token
+          if (localStorage.getItem('refresh_token')) {
+            localStorage.setItem('auth_token', newAccessToken);
+          } else {
+            sessionStorage.setItem('auth_token', newAccessToken);
+          }
           
           // Update the authorization header
           if (originalRequest.headers) {
@@ -97,9 +103,14 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, logout user
         console.warn('🔑 Token refresh failed - redirecting to signin');
+        
+        // Clear auth data from both storages
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('refresh_token');
+        sessionStorage.removeItem('user');
         
         // Redirect to signin if not already there
         if (window.location.pathname !== '/signin' && window.location.pathname !== '/signup') {
@@ -114,10 +125,13 @@ api.interceptors.response.use(
       // Token refresh failed or no refresh token available
       console.warn('🔑 Authentication failed - redirecting to signin');
       
-      // Clear auth data
+      // Clear auth data from both storages
       localStorage.removeItem('auth_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('refresh_token');
+      sessionStorage.removeItem('user');
       
       // Redirect to signin page
       if (window.location.pathname !== '/signin') {
@@ -148,13 +162,13 @@ api.interceptors.response.use(
 export const apiHelpers = {
   // Check if user is authenticated
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
     return !!token;
   },
 
-  // Get current user from localStorage
+  // Get current user from storage (checks both localStorage and sessionStorage)
   getCurrentUser(): any {
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
     if (userStr) {
       try {
         return JSON.parse(userStr);
@@ -166,20 +180,34 @@ export const apiHelpers = {
     return null;
   },
 
-  // Set auth token
-  setAuthToken(token: string): void {
-    localStorage.setItem('auth_token', token);
+  // Set auth token in the appropriate storage
+  setAuthToken(token: string, rememberMe: boolean = false): void {
+    const storage = rememberMe ? localStorage : sessionStorage;
+    storage.setItem('auth_token', token);
+    
+    // Clear from the other storage to avoid conflicts
+    const otherStorage = rememberMe ? sessionStorage : localStorage;
+    otherStorage.removeItem('auth_token');
   },
 
-  // Set user data
-  setUser(user: any): void {
-    localStorage.setItem('user', JSON.stringify(user));
+  // Set user data in the appropriate storage
+  setUser(user: any, rememberMe: boolean = false): void {
+    const storage = rememberMe ? localStorage : sessionStorage;
+    storage.setItem('user', JSON.stringify(user));
+    
+    // Clear from the other storage to avoid conflicts
+    const otherStorage = rememberMe ? sessionStorage : localStorage;
+    otherStorage.removeItem('user');
   },
 
-  // Clear auth data
+  // Clear auth data from both storages
   clearAuth(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('refresh_token');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('refresh_token');
   },
 
   // Handle API error and extract message

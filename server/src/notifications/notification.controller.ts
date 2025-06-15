@@ -218,4 +218,25 @@ export class NotificationController {
       throw error;
     }
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('follow-requests/cleanup')
+  @HttpCode(HttpStatus.OK)
+  async cleanupDuplicateFollowRequests(@Request() req: any) {
+    try {
+      // Only allow admins or in development mode
+      if (process.env.NODE_ENV !== 'development') {
+        throw new Error('Cleanup only available in development mode');
+      }
+      
+      const result = await this.notificationService.cleanupDuplicateFollowRequests();
+      return {
+        statusCode: HttpStatus.OK,
+        message: `Cleaned up ${result.removed} duplicate follow requests`,
+        data: result,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }

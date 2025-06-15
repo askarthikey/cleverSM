@@ -16,6 +16,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     console.log('🚀 DatabaseService: Initializing...');
     await this.databaseConfig.connect();
     this.db = this.databaseConfig.getDb();
+    
+    // Create unique indexes to prevent duplicates
+    await this.createUniqueIndexes();
+    
     this.isInitialized = true;
     console.log('✅ DatabaseService: Initialized successfully');
   }
@@ -43,5 +47,28 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   // Add method to check if ready
   isReady(): boolean {
     return this.isInitialized;
+  }
+
+  // Create unique indexes to prevent duplicate data
+  private async createUniqueIndexes() {
+    try {
+      // Create unique index for follow requests (one pending request per sender-recipient pair)
+      await this.db.collection('followRequests').createIndex(
+        { 
+          senderId: 1, 
+          recipientId: 1, 
+          status: 1 
+        },
+        { 
+          unique: true,
+          name: 'unique_pending_follow_request',
+          partialFilterExpression: { status: 'pending' }
+        }
+      );
+      
+      console.log('✅ Unique indexes created successfully');
+    } catch (error) {
+      console.warn('⚠️ Index creation warning (may already exist):', error.message);
+    }
   }
 }

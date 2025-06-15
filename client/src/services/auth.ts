@@ -34,6 +34,21 @@ export interface LoginRequest {
   password: string
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
+export interface ChangePasswordResponse {
+  success: boolean
+}
+
+export interface BackendChangePasswordResponse {
+  statusCode: number
+  message: string
+  data: ChangePasswordResponse
+}
+
 export interface UsernameCheckResponse {
   available: boolean
 }
@@ -71,6 +86,19 @@ class AuthService {
     return response.data.data
   }
 
+  logout() {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('user')
+  }
+
+  async changePassword(data: ChangePasswordRequest): Promise<ChangePasswordResponse> {
+    console.log('🔐 Attempting to change password...')
+    const response = await api.post<BackendChangePasswordResponse>('/auth/change-password', data)
+    console.log('✅ Password change response:', response.data)
+    return response.data.data
+  }
+
   async checkUsername(username: string): Promise<UsernameCheckResponse> {
     const response = await api.get<BackendUsernameCheckResponse>(`/auth/check-username/${username}`)
     return response.data.data
@@ -91,12 +119,6 @@ class AuthService {
       this.logout()
       return null
     }
-  }
-
-  logout() {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('refresh_token')
-    localStorage.removeItem('user')
   }
 
   getStoredUser(): User | null {

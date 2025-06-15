@@ -7,10 +7,13 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -90,6 +93,33 @@ export class AuthController {
       };
     } catch (error) {
       throw new BadRequestException(error.message || 'Username check failed');
+    }
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@Request() req, @Body() body: { currentPassword: string; newPassword: string }) {
+    try {
+      if (!body.currentPassword || !body.newPassword) {
+        throw new BadRequestException('Current password and new password are required');
+      }
+
+      if (body.newPassword.length < 8) {
+        throw new BadRequestException('New password must be at least 8 characters long');
+      }
+
+      await this.authService.changePassword(req.user.userId, body.currentPassword, body.newPassword);
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'Password changed successfully',
+        data: { success: true },
+      };
+    } catch (error) {
+      if (error.status) {
+        throw error;
+      }
+      throw new BadRequestException(error.message || 'Password change failed');
     }
   }
 }

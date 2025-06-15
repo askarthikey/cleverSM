@@ -646,7 +646,7 @@ const handleFollowAction = async (targetUser: User) => {
         targetUser.followers.splice(index, 1)
       }
       
-      showToast(response.message, 'success')
+      showToast(response.message || 'Successfully unfollowed user', 'success')
     } else if (targetUser.followRequestSent) {
       // Cancel follow request
       await notificationService.cancelFollowRequest(targetUser._id)
@@ -659,9 +659,29 @@ const handleFollowAction = async (targetUser: User) => {
       showToast('Follow request sent', 'success')
     }
     
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error handling follow action:', err)
-    showToast('Failed to update follow status', 'error')
+    
+    let errorMessage = 'Failed to update follow status'
+    
+    if (err?.response?.data?.message) {
+      errorMessage = err.response.data.message
+    } else if (err?.message) {
+      errorMessage = err.message
+    }
+    
+    // More specific error messages
+    if (err?.response?.status === 404) {
+      errorMessage = 'User not found'
+    } else if (err?.response?.status === 409) {
+      errorMessage = err?.response?.data?.message || 'Action already performed'
+    } else if (err?.response?.status === 401) {
+      errorMessage = 'Please log in to continue'
+    } else if (err?.response?.status === 500) {
+      errorMessage = 'Server error. Please try again later.'
+    }
+    
+    showToast(errorMessage, 'error')
   } finally {
     loadingUsers.value.delete(targetUser._id)
   }
@@ -670,8 +690,8 @@ const handleFollowAction = async (targetUser: User) => {
 
 
 const viewProfile = (user: User) => {
-  // Navigate to user profile (you can implement this route)
-  router.push(`/profile/${user.username}`)
+  // Navigate to user profile using user ID instead of username
+  router.push(`/profile/${user._id}`)
 }
 
 const getUserInitial = (username: string) => {

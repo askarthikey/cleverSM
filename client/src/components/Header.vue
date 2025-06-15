@@ -1,37 +1,54 @@
 <template>
-  <!-- Glassmorphism navbar -->
-  <nav class="relative z-10 backdrop-blur-lg bg-white/10 border-b border-white/20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <!-- Logo and Title -->
-        <router-link to="/" class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-gradient-to-r from-pink-500 to-violet-500 rounded-xl flex items-center justify-center">
-            <i class="pi pi-heart text-white text-xl"></i>
+  <!-- Enhanced Glassmorphism navbar -->
+  <nav class="relative z-20 backdrop-blur-xl bg-white/8 border-b border-white/15 shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+      <div class="flex justify-between items-center h-20">
+        <!-- Enhanced Logo and Title -->
+        <button @click="goToHome" class="flex items-center space-x-4 cursor-pointer group transition-transform duration-300 hover:scale-105">
+          <div class="w-12 h-12 bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-pink-500/50 transition-shadow duration-300">
+            <i class="pi pi-heart text-white text-2xl group-hover:scale-110 transition-transform duration-300"></i>
           </div>
-          <span class="text-white font-bold text-2xl">Vibe</span>
-        </router-link>
+          <span class="text-white font-bold text-3xl tracking-tight group-hover:text-pink-300 transition-colors duration-300">Vibe</span>
+        </button>
         
         <!-- Navigation Links - Only show when signed in -->
-        <div v-if="isAuthenticated" class="hidden md:flex items-center space-x-8">
-          <router-link to="/" class="text-white/80 hover:text-white transition-colors">Home</router-link>
-          <router-link to="/connect" class="text-white/80 hover:text-white transition-colors">Connect</router-link>
-          <router-link to="/explore" class="text-white/80 hover:text-white transition-colors">Explore</router-link>
-          <router-link to="/create" class="text-white/80 hover:text-white transition-colors">Create</router-link>
+        <div v-if="isAuthenticated" class="hidden md:flex items-center space-x-10">
+          <router-link 
+            to="/home" 
+            class="text-white/80 hover:text-white font-medium text-lg transition-all duration-300 hover:scale-105 relative group"
+          >
+            Home
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-violet-500 group-hover:w-full transition-all duration-300"></span>
+          </router-link>
+          <router-link 
+            to="/connect" 
+            class="text-white/80 hover:text-white font-medium text-lg transition-all duration-300 hover:scale-105 relative group"
+          >
+            Connect
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-violet-500 group-hover:w-full transition-all duration-300"></span>
+          </router-link>
+          <router-link 
+            to="/create" 
+            class="text-white/80 hover:text-white font-medium text-lg transition-all duration-300 hover:scale-105 relative group"
+          >
+            Create
+            <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-500 to-violet-500 group-hover:w-full transition-all duration-300"></span>
+          </router-link>
         </div>
 
-        <!-- Auth Buttons -->
-        <div class="flex items-center space-x-4">
+        <!-- Enhanced Auth Buttons -->
+        <div class="flex items-center space-x-5">
           <template v-if="!isAuthenticated">
-            <!-- Not signed in - show Sign In and Join Now -->
+            <!-- Not signed in - enhanced buttons -->
             <Button 
               label="Sign In" 
-              class="p-button-text text-white border-white/30 hover:bg-white/10"
+              class="p-button-text text-white border-2 border-white/30 hover:bg-white/15 hover:border-white/50 font-semibold text-lg px-6 py-3 rounded-xl transition-all duration-300 backdrop-blur-sm"
               outlined
               @click="() => $router.push('/signin')"
             />
             <Button 
               label="Join Now" 
-              class="bg-gradient-to-r from-pink-500 to-violet-500 border-0 hover:shadow-lg hover:shadow-pink-500/25"
+              class="bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 border-0 hover:shadow-xl hover:shadow-pink-500/40 font-semibold text-lg px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105"
               @click="() => $router.push('/signup')"
             />
           </template>
@@ -132,6 +149,8 @@
                 icon="pi pi-envelope" 
                 class="p-button-text text-white hover:bg-white/10"
                 rounded
+                @click="openGmail"
+                title="Contact Support"
               />
               <div class="relative" ref="userMenuRef">
                 <button
@@ -321,9 +340,29 @@ const formatTimeAgo = (dateString: string): string => {
 }
 
 // User menu functions
+const openGmail = () => {
+  const recipient = 'askarthikey01@gmail.com'
+  const subject = 'Contact from Vibe Social Media'
+  const body = 'Hi there!%0D%0A%0D%0AI am reaching out from the Vibe social media platform.%0D%0A%0D%0A'
+  
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${encodeURIComponent(subject)}&body=${body}`
+  
+  // Open Gmail in a new tab
+  window.open(gmailUrl, '_blank')
+}
+
+const goToHome = () => {
+  if (isAuthenticated.value) {
+    router.push('/home')
+  } else {
+    router.push('/')
+  }
+}
+
 const goToProfile = () => {
   showUserMenu.value = false
-  router.push(`/profile/${user.value?.username}`)
+  // Navigate to current user's profile
+  router.push(`/profile/${user.value?._id}`)
 }
 
 const goToSettings = () => {
@@ -334,6 +373,6 @@ const goToSettings = () => {
 const handleLogout = () => {
   showUserMenu.value = false
   logout()
-  router.push('/')
+  router.push('/') // This will show StartPage for non-authenticated users
 }
 </script>

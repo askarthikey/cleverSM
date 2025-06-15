@@ -111,6 +111,97 @@ export class UsersService {
     return user as UserResponse;
   }
 
+  async findByIdWithPassword(id: string): Promise<User | null> {
+    if (!ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid user ID');
+    }
+
+    const usersCollection = this.getUsersCollection();
+    const user = await usersCollection.findOne({ _id: new ObjectId(id) });
+    return user as User | null;
+  }
+
+  async updatePassword(userId: string, hashedPassword: string): Promise<void> {
+    if (!ObjectId.isValid(userId)) {
+      throw new NotFoundException('Invalid user ID');
+    }
+
+    const usersCollection = this.getUsersCollection();
+    const result = await usersCollection.updateOne(
+      { _id: new ObjectId(userId) },
+      { 
+        $set: { 
+          password: hashedPassword,
+          updatedAt: new Date()
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  async findByIdWithFollowStatus(id: string, currentUserId?: string): Promise<UserResponse> {
+    if (!ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid user ID');
+    }
+
+    const usersCollection = this.getUsersCollection();
+    const followRequestsCollection = this.databaseService.getCollection('followRequests');
+    
+    const user = await usersCollection.findOne(
+      { _id: new ObjectId(id) },
+      { projection: { password: 0 } }
+    );
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // If no current user, return without follow status
+    if (!currentUserId || !ObjectId.isValid(currentUserId)) {
+      return {
+        ...user,
+        isFollowing: false,
+        followRequestSent: false
+      } as UserResponse;
+    }
+
+    // If it's the same user, return without follow status
+    if (id === currentUserId) {
+      return {
+        ...user,
+        isFollowing: false,
+        followRequestSent: false
+      } as UserResponse;
+    }
+
+    // Get current user's following list
+    const currentUser = await usersCollection.findOne(
+      { _id: new ObjectId(currentUserId) },
+      { projection: { following: 1 } }
+    );
+
+    // Check if current user is following this user
+    const isFollowing = currentUser?.following?.some(
+      followingId => followingId.toString() === id
+    ) || false;
+
+    // Check if there's a pending follow request
+    const pendingRequest = await followRequestsCollection.findOne({
+      senderId: new ObjectId(currentUserId),
+      recipientId: new ObjectId(id),
+      status: 'pending'
+    });
+
+    return {
+      ...user,
+      isFollowing,
+      followRequestSent: !!pendingRequest
+    } as UserResponse;
+  }
+
   async checkUsernameAvailability(username: string): Promise<boolean> {
     const usersCollection = this.getUsersCollection();
     const user = await usersCollection.findOne({ username });
@@ -394,6 +485,58 @@ export class UsersService {
       success: true, 
       message: 'Successfully unfollowed user',
       isFollowing: false
+    };
+  }
+
+  async getFollowStatus(currentUserId: string, targetUserId: string): Promise<{
+    isFollowing: boolean;
+    followRequestSent: boolean;
+    hasFollowRequest: boolean;
+  }> {
+    if (!ObjectId.isValid(currentUserId) || !ObjectId.isValid(targetUserId)) {
+      throw new NotFoundException('Invalid user ID');
+    }
+
+    // If it's the same user, return false for all statuses
+    if (currentUserId === targetUserId) {
+      return {
+        isFollowing: false,
+        followRequestSent: false,
+        hasFollowRequest: false
+      };
+    }
+
+    const usersCollection = this.getUsersCollection();
+    const followRequestsCollection = this.databaseService.getCollection('followRequests');
+
+    // Check if current user is following target user
+    const currentUser = await usersCollection.findOne(
+      { _id: new ObjectId(currentUserId) },
+      { projection: { following: 1 } }
+    );
+
+    const isFollowing = currentUser?.following?.some(
+      followingId => followingId.toString() === targetUserId
+    ) || false;
+
+    // Check if current user has sent a pending follow request to target user
+    const sentRequest = await followRequestsCollection.findOne({
+      senderId: new ObjectId(currentUserId),
+      recipientId: new ObjectId(targetUserId),
+      status: 'pending'
+    });
+
+    // Check if target user has sent a follow request to current user
+    const receivedRequest = await followRequestsCollection.findOne({
+      senderId: new ObjectId(targetUserId),
+      recipientId: new ObjectId(currentUserId),
+      status: 'pending'
+    });
+
+    return {
+      isFollowing,
+      followRequestSent: !!sentRequest,
+      hasFollowRequest: !!receivedRequest
     };
   }
 }

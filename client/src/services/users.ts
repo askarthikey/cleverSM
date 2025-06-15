@@ -66,15 +66,82 @@ export const usersApi = {
     return response.data
   },
 
+  // Get user by username
+  getUserByUsername: async (username: string): Promise<User> => {
+    try {
+      // Use search endpoint to find user by exact username match
+      const response = await usersApi.searchUsers(username, 1, 10)
+      const matchingUser = response.users.find(user => 
+        user.username.toLowerCase() === username.toLowerCase()
+      )
+      
+      if (!matchingUser) {
+        throw new Error(`User with username "${username}" not found`)
+      }
+      
+      return matchingUser
+    } catch (error: any) {
+      if (error.message?.includes('not found')) {
+        throw error
+      }
+      throw new Error(`Failed to find user with username "${username}"`)
+    }
+  },
+
   // Follow a user
   followUser: async (userId: string): Promise<FollowResponse> => {
-    const response = await api.post(`/users/${userId}/follow`)
-    return response.data
+    try {
+      const response = await api.post(`/users/${userId}/follow`)
+      return response.data
+    } catch (error: any) {
+      console.error('Error following user:', error)
+      
+      if (error?.response?.status === 409) {
+        throw new Error('Already following this user')
+      } else if (error?.response?.status === 404) {
+        throw new Error('User not found')
+      } else if (error?.response?.status === 401) {
+        throw new Error('Please log in to continue')
+      }
+      
+      throw error
+    }
   },
 
   // Unfollow a user
   unfollowUser: async (userId: string): Promise<FollowResponse> => {
-    const response = await api.delete(`/users/${userId}/follow`)
-    return response.data
+    try {
+      const response = await api.delete(`/users/${userId}/follow`)
+      return response.data
+    } catch (error: any) {
+      console.error('Error unfollowing user:', error)
+      
+      if (error?.response?.status === 404) {
+        throw new Error('User not found')
+      } else if (error?.response?.status === 401) {
+        throw new Error('Please log in to continue')
+      }
+      
+      throw error
+    }
+  },
+
+  // Get follow status between current user and target user
+  getFollowStatus: async (userId: string): Promise<{
+    isFollowing: boolean;
+    followRequestSent: boolean;
+    hasFollowRequest: boolean;
+  }> => {
+    try {
+      const response = await api.get(`/users/${userId}/follow-status`)
+      return response.data.data
+    } catch (error: any) {
+      console.error('Error getting follow status:', error)
+      return {
+        isFollowing: false,
+        followRequestSent: false,
+        hasFollowRequest: false
+      }
+    }
   }
 }

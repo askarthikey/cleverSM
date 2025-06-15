@@ -73,21 +73,57 @@ export const notificationService = {
     try {
       // First we need to get the target user's username
       const userResponse = await api.get(`/users/${toUserId}`)
-      const targetUsername = userResponse.data.username
       
-      await api.post('/notifications/follow-request', { 
+      let targetUsername: string
+      
+      // Handle different response formats
+      if (userResponse.data?.username) {
+        targetUsername = userResponse.data.username
+      } else if (userResponse.data?.data?.username) {
+        targetUsername = userResponse.data.data.username
+      } else {
+        throw new Error('Invalid user data received - username not found')
+      }
+      
+      console.log('Target username:', targetUsername)
+      
+      const response = await api.post('/notifications/follow-request', { 
         recipientId: toUserId,
         recipientUsername: targetUsername
       })
-    } catch (error) {
+      
+      console.log('Follow request response:', response.data)
+    } catch (error: any) {
       console.error('Error sending follow request:', error)
+      
+      if (error?.response?.status === 400 && error?.response?.data?.message?.includes('already sent')) {
+        throw new Error('Follow request already sent')
+      } else if (error?.response?.status === 404) {
+        throw new Error('User not found')
+      } else if (error?.response?.status === 401) {
+        throw new Error('Please log in to continue')
+      }
+      
       throw error
     }
   },
 
   // Cancel a follow request
   async cancelFollowRequest(toUserId: string): Promise<void> {
-    await api.delete(`/notifications/follow-request/${toUserId}`)
+    try {
+      const response = await api.delete(`/notifications/follow-request/${toUserId}`)
+      console.log('Cancel request response:', response.data)
+    } catch (error: any) {
+      console.error('Error cancelling follow request:', error)
+      
+      if (error?.response?.status === 404) {
+        throw new Error('Follow request not found')
+      } else if (error?.response?.status === 401) {
+        throw new Error('Please log in to continue')
+      }
+      
+      throw error
+    }
   },
 
   // Accept a follow request
@@ -104,5 +140,5 @@ export const notificationService = {
   async getPendingFollowRequests(): Promise<FollowRequest[]> {
     const response = await api.get('/notifications/follow-requests/pending')
     return response.data.data
-  }
+  },
 }

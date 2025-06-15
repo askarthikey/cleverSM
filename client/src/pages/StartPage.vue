@@ -1,49 +1,53 @@
 <template>
-  <div class="relative">
+  <div class="relative min-h-screen">
     <!-- Hero Section -->
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
-      <div class="grid lg:grid-cols-2 gap-12 items-center">
+    <div class="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 pt-24 pb-20">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
         <!-- Left side - Content -->
-        <div class="text-center lg:text-left">
-          <h1 class="text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            Connect,
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-violet-400">
-              Share,
-            </span>
-            Inspire
-          </h1>
-          <p class="text-xl text-white/80 mb-8 max-w-lg">
-            Join millions of creators sharing their moments, stories, and passions. 
-            Your next viral moment starts here.
-          </p>
+        <div class="text-center lg:text-left space-y-8">
+          <div class="space-y-6">
+            <h1 class="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-white leading-[1.1] tracking-tight">
+              Connect,
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-violet-400 animate-pulse">
+                Share,
+              </span>
+              <span class="block">Inspire</span>
+            </h1>
+            <p class="text-xl sm:text-2xl text-white/90 leading-relaxed max-w-2xl font-light">
+              Join millions of creators sharing their moments, stories, and passions. 
+              <span class="text-pink-300 font-medium">Your next viral moment starts here.</span>
+            </p>
+          </div>
           
-          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <div class="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start pt-4">
             <Button 
               label="Get Started Free" 
-              class="bg-gradient-to-r from-pink-500 to-violet-500 border-0 text-lg px-8 py-3 hover:shadow-lg hover:shadow-pink-500/25"
+              class="bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 border-0 text-white text-lg font-semibold px-10 py-4 hover:shadow-2xl hover:shadow-pink-500/30 transform hover:scale-105 transition-all duration-300 rounded-2xl"
               size="large"
+              @click="goToSignUp"
             />
             <Button 
-              label="Watch Demo" 
-              icon="pi pi-play"
-              class="p-button-outlined border-white/30 text-white hover:bg-white/10"
+              label="Sign In" 
+              icon="pi pi-sign-in"
+              class="p-button-outlined border-2 border-white/40 text-white hover:bg-white/15 hover:border-white/60 text-lg font-semibold px-10 py-4 rounded-2xl transition-all duration-300 backdrop-blur-sm"
               size="large"
+              @click="goToSignIn"
             />
           </div>
 
           <!-- Stats -->
-          <div class="flex justify-center lg:justify-start space-x-8 mt-12">
-            <div class="text-center">
-              <div class="text-3xl font-bold text-white">10M+</div>
-              <div class="text-white/60">Active Users</div>
+          <div class="grid grid-cols-3 gap-8 pt-12 max-w-lg mx-auto lg:mx-0">
+            <div class="text-center group">
+              <div class="text-3xl lg:text-4xl font-bold text-white group-hover:scale-110 transition-transform duration-300">10M+</div>
+              <div class="text-white/70 text-sm lg:text-base font-medium mt-1">Active Users</div>
             </div>
-            <div class="text-center">
-              <div class="text-3xl font-bold text-white">500K+</div>
-              <div class="text-white/60">Daily Posts</div>
+            <div class="text-center group">
+              <div class="text-3xl lg:text-4xl font-bold text-white group-hover:scale-110 transition-transform duration-300">500K+</div>
+              <div class="text-white/70 text-sm lg:text-base font-medium mt-1">Daily Posts</div>
             </div>
-            <div class="text-center">
-              <div class="text-3xl font-bold text-white">1B+</div>
-              <div class="text-white/60">Interactions</div>
+            <div class="text-center group">
+              <div class="text-3xl lg:text-4xl font-bold text-white group-hover:scale-110 transition-transform duration-300">1B+</div>
+              <div class="text-white/70 text-sm lg:text-base font-medium mt-1">Interactions</div>
             </div>
           </div>
         </div>
@@ -118,19 +122,19 @@
     </div>
 
     <!-- Features section -->
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold text-white mb-4">Why Choose Vibe?</h2>
-        <p class="text-white/70 text-lg">Experience social media like never before</p>
+    <div class="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-24">
+      <div class="text-center mb-20">
+        <h2 class="text-4xl sm:text-5xl font-bold text-white mb-6 tracking-tight">Why Choose Vibe?</h2>
+        <p class="text-white/80 text-xl font-light max-w-2xl mx-auto leading-relaxed">Experience social media like never before with our cutting-edge features</p>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-8">
-        <div v-for="feature in features" :key="feature.id" class="feature-card">
-          <div class="feature-icon">
+      <div class="grid md:grid-cols-3 gap-10">
+        <div v-for="feature in features" :key="feature.id" class="feature-card group">
+          <div class="feature-icon group-hover:scale-110 transition-transform duration-300">
             <i :class="feature.icon"></i>
           </div>
-          <h3 class="text-xl font-bold text-white mb-3">{{ feature.title }}</h3>
-          <p class="text-white/70">{{ feature.description }}</p>
+          <h3 class="text-2xl font-bold text-white mb-4 group-hover:text-pink-300 transition-colors duration-300">{{ feature.title }}</h3>
+          <p class="text-white/80 leading-relaxed text-lg">{{ feature.description }}</p>
         </div>
       </div>
     </div>
@@ -139,6 +143,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+// Navigation functions
+const goToSignUp = () => {
+  router.push('/signup')
+}
+
+const goToSignIn = () => {
+  router.push('/signin')
+}
 
 const mockPosts = ref([
   {
@@ -322,30 +338,50 @@ const features = ref([
 
 /* Feature cards */
 .feature-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 40px 32px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.feature-card:hover::before {
+  left: 100%;
 }
 
 .feature-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(236, 72, 153, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .feature-icon {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 20px;
-  font-size: 24px;
+  margin: 0 auto 24px;
+  font-size: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 /* Responsive */

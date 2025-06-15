@@ -203,8 +203,9 @@
                   <span>{{ post.likesCount }}</span>
                 </button>
 
-                <!-- Comment Button -->
+                <!-- Comment Button - only show if comments are allowed -->
                 <button 
+                  v-if="post.allowComments"
                   @click="toggleComments(post._id)"
                   class="flex items-center space-x-2 text-white/70 hover:text-blue-400 transition-colors"
                 >
@@ -212,8 +213,8 @@
                   <span>{{ post.commentsCount }}</span>
                 </button>
 
-                <!-- Share Button with Dropdown -->
-                <div class="relative">
+                <!-- Share Button with Dropdown - only show if shares are allowed -->
+                <div v-if="post.allowShares" class="relative">
                   <button 
                     @click="toggleShareMenu(post._id)"
                     class="flex items-center space-x-2 text-white/70 hover:text-green-400 transition-colors share-button"
@@ -271,7 +272,8 @@
             <!-- Comments Section (if expanded) -->
             <div v-if="expandedPosts.includes(post._id)" class="mt-4 pt-4 border-t border-white/20">
               <div class="space-y-4">
-                <!-- Add Comment -->                  <div class="flex space-x-3">
+                <!-- Add Comment - only show if comments are allowed -->
+                <div v-if="post.allowComments" class="flex space-x-3">
                   <div class="h-8 w-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                     <span class="text-white text-xs font-semibold">{{ userInitial }}</span>
                   </div>
@@ -291,6 +293,11 @@
                       <i class="pi pi-send text-white text-sm" :class="{ 'animate-pulse': newComments[post._id]?.trim() }"></i>
                     </button>
                   </div>
+                </div>
+
+                <!-- Comments disabled message -->
+                <div v-if="!post.allowComments && expandedPosts.includes(post._id)" class="text-center py-4">
+                  <p class="text-white/50 text-sm">Comments are disabled for this post</p>
                 </div>
 
                 <!-- Comments List -->

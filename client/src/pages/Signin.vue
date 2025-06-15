@@ -21,9 +21,13 @@
                 v-model="formData.identifier"
                 type="text"
                 placeholder="Enter your username or email"
+                autocomplete="username"
+                required
+                aria-describedby="identifier-error"
                 class="w-full bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-xl p-3 pl-12 pr-10 focus:border-pink-500 focus:outline-none transition-colors"
                 :class="{ 'border-red-500': errors.identifier, 'border-green-500': isValidIdentifier }"
                 @input="validateIdentifier"
+                @keydown.enter="focusPassword"
               />
               <!-- Input type indicator -->
               <div class="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -52,7 +56,7 @@
                 ></i>
               </div>
             </div>
-            <p v-if="errors.identifier" class="text-red-400 text-sm">{{ errors.identifier }}</p>
+            <p v-if="errors.identifier" id="identifier-error" class="text-red-400 text-sm" role="alert">{{ errors.identifier }}</p>
             <p v-else-if="identifierType && formData.identifier" class="text-white/60 text-sm">
               {{ identifierType === 'email' ? 'Detected email address' : 'Detected username' }}
             </p>
@@ -72,9 +76,13 @@
             </div>
             <div class="relative">
               <input
+                ref="passwordInput"
                 v-model="formData.password"
                 :type="showPassword ? 'text' : 'password'"
                 placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+                aria-describedby="password-error"
                 class="w-full bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-xl p-3 pl-12 pr-12 focus:border-pink-500 focus:outline-none transition-colors"
                 :class="{ 'border-red-500': errors.password }"
                 @input="validatePassword"
@@ -90,7 +98,7 @@
                 <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
               </button>
             </div>
-            <p v-if="errors.password" class="text-red-400 text-sm">{{ errors.password }}</p>
+            <p v-if="errors.password" id="password-error" class="text-red-400 text-sm" role="alert">{{ errors.password }}</p>
           </div>
 
           <!-- Remember Me & Additional Options -->
@@ -114,7 +122,8 @@
           <button
             type="submit"
             :disabled="!isFormValid || isLoading"
-            class="w-full bg-gradient-to-r from-pink-500 to-violet-500 text-white text-lg py-3 rounded-xl hover:shadow-lg hover:shadow-pink-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all relative overflow-hidden"
+            :aria-busy="isLoading"
+            class="w-full bg-gradient-to-r from-pink-500 to-violet-500 text-white text-lg py-3 rounded-xl hover:shadow-lg hover:shadow-pink-500/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all relative overflow-hidden focus:ring-2 focus:ring-pink-500/50 focus:outline-none"
           >
             <span v-if="!isLoading">Sign In</span>
             <div v-else class="flex items-center justify-center space-x-2">
@@ -124,9 +133,9 @@
           </button>
 
           <!-- API Error Display -->
-          <div v-if="apiError" class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <div v-if="apiError" class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl" role="alert" aria-live="polite">
             <div class="flex items-center space-x-2">
-              <i class="pi pi-exclamation-triangle text-red-400"></i>
+              <i class="pi pi-exclamation-triangle text-red-400" aria-hidden="true"></i>
               <p class="text-red-200 text-sm">{{ apiError }}</p>
             </div>
           </div>
@@ -194,6 +203,9 @@ import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
 const { setUser } = useAuth()
+
+// Template refs
+const passwordInput = ref<HTMLInputElement>()
 
 // Form data
 const formData = ref({
@@ -287,6 +299,11 @@ const isFormValid = computed(() => {
 watch(() => formData.value.identifier, validateIdentifier)
 watch(() => formData.value.password, validatePassword)
 
+// Utility functions
+const focusPassword = () => {
+  passwordInput.value?.focus()
+}
+
 // Handle form submission
 const handleSignIn = async () => {
   if (!isFormValid.value) return
@@ -296,7 +313,7 @@ const handleSignIn = async () => {
 
   try {
     const loginData: LoginRequest = {
-      identifier: formData.value.identifier,
+      identifier: formData.value.identifier.trim(),
       password: formData.value.password
     }
 
@@ -304,22 +321,57 @@ const handleSignIn = async () => {
     
     console.log('Login successful:', response)
     
-    // Set user in global state with token
-    setUser(response.user, response.token)
+    // Convert the auth service user to the format expected by useAuth
+    const userForAuth = {
+      _id: response.user._id,
+      username: response.user.username,
+      email: response.user.email || '', // Provide empty string if email is undefined
+      profilePicture: response.user.profilePicture
+    }
+    
+    // Set user in global state with access token and storage preference
+    setUser(userForAuth, response.accessToken, formData.value.rememberMe)
+    
+    // Store refresh token with the same storage preference
+    if (response.refreshToken) {
+      const storage = formData.value.rememberMe ? localStorage : sessionStorage
+      storage.setItem('refresh_token', response.refreshToken)
+      
+      // Clear from the other storage to avoid conflicts
+      const otherStorage = formData.value.rememberMe ? sessionStorage : localStorage
+      otherStorage.removeItem('refresh_token')
+    }
     
     // Reset failed attempts on success
     failedAttempts.value = 0
-    showSuccess.value = true
+    
+    // Redirect immediately to home page instead of showing success modal
+    redirectToDashboard()
     
   } catch (error: any) {
     console.error('Sign in error:', error)
     failedAttempts.value++
     
-    if (failedAttempts.value >= 5) {
-      apiError.value = 'Account temporarily locked due to multiple failed attempts'
-    } else {
-      apiError.value = error.message || 'Invalid credentials. Please try again.'
+    // Handle specific error types
+    let errorMessage = 'An unexpected error occurred. Please try again.'
+    
+    if (error.response?.status === 401) {
+      errorMessage = 'Invalid username/email or password. Please check your credentials.'
+    } else if (error.response?.status === 403) {
+      errorMessage = 'Your account has been suspended. Please contact support.'
+    } else if (error.response?.status === 429) {
+      errorMessage = 'Too many login attempts. Please wait a moment before trying again.'
+    } else if (error.response?.status === 500) {
+      errorMessage = 'Server error. Please try again later.'
+    } else if (error.message) {
+      errorMessage = error.message
     }
+    
+    if (failedAttempts.value >= 5) {
+      errorMessage = 'Account temporarily locked due to multiple failed attempts. Please wait 15 minutes or reset your password.'
+    }
+    
+    apiError.value = errorMessage
   } finally {
     isLoading.value = false
   }
@@ -327,7 +379,16 @@ const handleSignIn = async () => {
 
 const redirectToDashboard = () => {
   showSuccess.value = false
-  router.push('/')
+  
+  // Check if there's a redirect URL in the query params
+  const returnTo = router.currentRoute.value.query.returnTo as string
+  
+  if (returnTo && returnTo.startsWith('/')) {
+    // Ensure the returnTo is a valid internal route
+    router.push(returnTo)
+  } else {
+    router.push('/home') // Redirect to /home instead of /
+  }
 }
 </script>
 
