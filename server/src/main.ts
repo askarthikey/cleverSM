@@ -11,6 +11,8 @@ async function bootstrap() {
     // Enable CORS with specific configuration
     app.enableCors({
       origin: [
+        'https://clever-sm-ask.vercel.app', // Production frontend
+        'https://clever-sm-six.vercel.app', // Production frontend with port
         'http://localhost:5173',  // Vite dev server
         'http://localhost:3000',  // Alternative frontend port
         'http://localhost:4173',  // Vite preview
